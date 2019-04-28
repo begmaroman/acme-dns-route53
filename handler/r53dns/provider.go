@@ -40,7 +40,7 @@ func (p *DNSProvider) Present(domain, token, keyAuth string) error {
 
 	authZone, err := dns01.FindZoneByFqdn(fqdn)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "unable to find zone by FQDN = '%s'", fqdn)
 	}
 
 	log.Infof("[%s] acme: Creating TXT record in %s zone", domain, authZone)
@@ -63,7 +63,7 @@ func (p *DNSProvider) CleanUp(domain, token, keyAuth string) error {
 	// Retrieve zone by FQDN
 	authZone, err := dns01.FindZoneByFqdn(fqdn)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "unable to find zone by FQDN = '%s'", fqdn)
 	}
 
 	log.Infof("[%s] acme: Removing TXT record from %s zone", domain, authZone)
