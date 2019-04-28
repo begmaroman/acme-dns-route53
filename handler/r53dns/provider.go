@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/go-acme/lego/challenge"
@@ -15,8 +16,7 @@ import (
 )
 
 const (
-	recordType       = "TXT"
-	recordTTL  int64 = 5
+	recordTTL int64 = 5
 )
 
 // Ensures that DNSProvider implements challenge.Provider interface
@@ -81,15 +81,13 @@ func (p *DNSProvider) CleanUp(domain, token, keyAuth string) error {
 
 // changeDNSRecord changed the record in DNS Route53 by the given params
 func (p *DNSProvider) changeDNSRecord(action, domainName, value string) (string, error) {
-	tp := recordType
+	tp := route53.RRTypeTxt
 	ttl := recordTTL
 
 	hostedZoneID, err := p.retrieveHostedZone(domainName)
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to retrieve hosted zone ID for domain = '%s'", domainName)
 	}
-
-	log.Println("value", value)
 
 	comment := p.buildDNSComment(action, domainName)
 
@@ -116,6 +114,11 @@ func (p *DNSProvider) changeDNSRecord(action, domainName, value string) (string,
 	})
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to change DNS record with HostedZoneId = '%s', Name = '%s', and Action = '%s'", hostedZoneID, domainName, action)
+	}
+
+	// Wait for change
+	if err := p.waitForChange(*result.ChangeInfo.Id); err != nil {
+		return "", errors.Wrap(err, "failed while waiting for change status")
 	}
 
 	return *result.ChangeInfo.Id, nil
@@ -166,4 +169,25 @@ func (p *DNSProvider) retrieveHostedZone(domainName string) (string, error) {
 	sort.Sort(zones)
 
 	return *zones[0].Id, nil
+}
+
+// waitForChange waits for a change to be propagated to all Route53 DNS servers.
+func (p *DNSProvider) waitForChange(changeID string) error {
+	// Check change
+	for i := 0; i < 120; i++ {
+		changeResp, err := p.r53.GetChange(&route53.GetChangeInput{
+			Id: &changeID,
+		})
+		if err != nil {
+			return errors.Wrap(err, "unable to get changing status")
+		}
+
+		if *changeResp.ChangeInfo.Status == route53.ChangeStatusInsync {
+			break
+		}
+
+		time.Sleep(time.Second)
+	}
+
+	return nil
 }
