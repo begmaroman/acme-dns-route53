@@ -63,7 +63,7 @@ func (h *CertificateHandler) Create(domains []string, email string) error {
 	}
 
 	// Store the obtained certificate
-	if err := h.store.Store(certificates); err != nil {
+	if err := h.store.Store(certificates, domains); err != nil {
 		return err
 	}
 

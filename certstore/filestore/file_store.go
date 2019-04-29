@@ -29,7 +29,7 @@ func New() *FileStore {
 }
 
 // Store implements CertStore interface
-func (f *FileStore) Store(cert *certificate.Resource) error {
+func (f *FileStore) Store(cert *certificate.Resource, domains []string) error {
 	domain := cert.Domain
 	pem := true // TODO: Fix this
 

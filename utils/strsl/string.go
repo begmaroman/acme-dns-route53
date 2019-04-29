@@ -13,3 +13,29 @@ func Equal(a, b []string) bool {
 	}
 	return true
 }
+
+// ContainsSub checks if baseSlice contains subSlice
+func ContainsSub(baseSlice, subSlice []string) bool {
+	if len(baseSlice) < len(subSlice) {
+		return false
+	}
+
+	same := true
+
+	for i := range subSlice {
+		var found bool
+		for j := range baseSlice {
+			if subSlice[i] == baseSlice[j] {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			same = false
+			break
+		}
+	}
+
+	return same
+}
