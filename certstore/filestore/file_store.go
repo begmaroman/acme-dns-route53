@@ -1,4 +1,4 @@
-package certstore
+package filestore
 
 import (
 	"bytes"
@@ -7,6 +7,8 @@ import (
 
 	"github.com/go-acme/lego/certificate"
 	"github.com/pkg/errors"
+
+	"github.com/begmaroman/acme-dns-route53/certstore"
 )
 
 var (
@@ -14,15 +16,15 @@ var (
 )
 
 // Ensures that FileStore implements CertStore interface
-var _ CertStore = &FileStore{}
+var _ certstore.CertStore = &FileStore{}
 
 // FileStore is the implementation of CertStore interface.
 // Used file system to work with certificates
 type FileStore struct {
 }
 
-// NewFileStore is the constructor of FileStore
-func NewFileStore() *FileStore {
+// New is the constructor of FileStore
+func New() *FileStore {
 	return &FileStore{}
 }
 

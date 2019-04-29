@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/begmaroman/acme-dns-route53/certstore/acmstore"
+
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/route53"
 
@@ -17,14 +19,14 @@ var (
 	// ResultPrinter is the printer used to print command results and errors
 	ResultPrinter printer.Printer = printer.NewStandardOutputPrinter(os.Stdout)
 
-	// FileStore is the store used for CRUD operations with certificates
-	FileStore certstore.CertStore = certstore.NewFileStore()
+	// CertStore is the store used for CRUD operations with certificates
+	CertStore certstore.CertStore
 
 	// Route53 is the Route53 client from just a session.
 	// Initial credentials loaded from SDK's default credential chain. Such as
 	// the environment, shared credentials (~/.aws/credentials), or EC2 Instance
 	// Role. These credentials will be used to to make the STS Assume Role API.
-	Route53 *route53.Route53 = route53.New(session.Must(session.NewSession()))
+	Route53 *route53.Route53
 
 	// RootCmd represents the base command when called without any subcommands
 	RootCmd = &cobra.Command{
@@ -35,6 +37,14 @@ var (
 )
 
 func init() {
+	// Initialized AWS session
+	awsSession := session.Must(session.NewSession())
+
+	// Initialize ACM certificate store
+	CertStore = acmstore.New(awsSession)
+
+	// Initialize Route53 client API
+	Route53 = route53.New(awsSession)
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

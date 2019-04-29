@@ -18,7 +18,7 @@ var certificateRenewCmd = &cobra.Command{
 		email := flags.GetEmailFlagValue(cmd)
 
 		// Create a new certificates handler
-		h := handler.NewCertificateHandler(ResultPrinter, FileStore, Route53)
+		h := handler.NewCertificateHandler(ResultPrinter, CertStore, Route53)
 
 		return h.Renew(domains, email)
 	},
