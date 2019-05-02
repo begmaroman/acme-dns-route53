@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"github.com/go-acme/lego/certcrypto"
 	"github.com/go-acme/lego/certificate"
 	"github.com/go-acme/lego/lego"
 	"github.com/go-acme/lego/registration"
+	"github.com/pkg/errors"
 
 	"github.com/begmaroman/acme-dns-route53/handler/r53dns"
 )
@@ -14,30 +14,24 @@ var (
 	registerOptions = registration.RegisterOptions{TermsOfServiceAgreed: true}
 )
 
-// Create creates new SSL certificates for the given domains with the given email
-func (h *CertificateHandler) Create(domains []string, email string) error {
-	var err error
-
-	// Create a user
-	certUser := NewCertUser(email)
-
-	// New accounts need a private key to start
-	// TODO: Maybe we need to store user's private key
-	if certUser.key, err = certcrypto.GeneratePrivateKey(certcrypto.RSA2048); err != nil {
-		return err
+// Obtain creates a new SSL certificate or renews existing one for the given domains with the given email
+func (h *CertificateHandler) Obtain(domains []string, email string) error {
+	// Load user
+	certUser, err := getUser(h.toUserParams(email))
+	if err != nil {
+		return errors.Wrap(err, "unable to load user")
 	}
 
-	// Create a new config
-	config := lego.NewConfig(certUser)
-
-	// This CA URL is configured for a local dev instance of Boulder running in Docker in a VM.
-	config.CADirURL = lego.LEDirectoryStaging       // TODO: Create a fleg to define production or staging
-	config.Certificate.KeyType = certcrypto.RSA2048 // TODO: Create a flag to define key type
+	// Create config
+	config, err := getConfig(h.toConfigParams(certUser))
+	if err != nil {
+		return errors.Wrap(err, "unable to create config")
+	}
 
 	// Create a client facilitates communication with the CA server.
 	client, err := lego.NewClient(config)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to create lego client")
 	}
 
 	// Use DNS-01 challenge to verify that the given domain belongs to the current server
@@ -57,17 +51,20 @@ func (h *CertificateHandler) Create(domains []string, email string) error {
 		Bundle:     true,
 		MustStaple: false,
 	}
-	certificates, err := client.Certificate.Obtain(request)
+	crt, err := client.Certificate.Obtain(request)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to obtain certificate")
 	}
 
 	// Store the obtained certificate
-	if err := h.store.Store(certificates, domains); err != nil {
-		return err
+	if err := h.store.Store(crt, domains); err != nil {
+		return errors.Wrap(err, "unable to store certificates")
 	}
 
-	// TODO: Do smth with certUser
+	// Store user's private key into config file by the config path
+	if err := certUser.StorePrivateKey(h.configDir); err != nil {
+		return errors.Wrap(err, "unable to store user's private key")
+	}
 
 	return nil
 }

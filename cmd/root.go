@@ -2,23 +2,20 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
-	"github.com/begmaroman/acme-dns-route53/certstore/acmstore"
+	"os"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/route53"
-
+	"github.com/go-acme/lego/log"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/begmaroman/acme-dns-route53/certstore"
-	"github.com/begmaroman/acme-dns-route53/printer"
+	"github.com/begmaroman/acme-dns-route53/certstore/acmstore"
 )
 
 var (
-	// ResultPrinter is the printer used to print command results and errors
-	ResultPrinter printer.Printer = printer.NewStandardOutputPrinter(os.Stdout)
-
 	// CertStore is the store used for CRUD operations with certificates
 	CertStore certstore.CertStore
 
@@ -37,6 +34,9 @@ var (
 )
 
 func init() {
+	// Initialize logger
+	log.Logger = logrus.New()
+
 	// Initialized AWS session
 	awsSession := session.Must(session.NewSession())
 

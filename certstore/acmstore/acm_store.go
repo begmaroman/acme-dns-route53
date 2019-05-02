@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/x509"
 	"encoding/pem"
-	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -68,7 +67,7 @@ func (a *ACM) Store(cert *certificate.Resource, domains []string) error {
 	}
 
 	if certArn != nil {
-		log.Infof("[%s] acm: Found existing server certificate in ACM with Arn = '%s'", domainsListString, certArn)
+		log.Infof("[%s] acm: Found existing server certificate in ACM with Arn = '%s'", domainsListString, aws.StringValue(certArn))
 	}
 
 	// Init request parameters
@@ -84,7 +83,7 @@ func (a *ACM) Store(cert *certificate.Resource, domains []string) error {
 		return errors.Wrap(err, "unable to store certificate into ACM")
 	}
 
-	log.Infof("[%s] acm: Imported certificate data in ACM with Arn = '%s'", domainsListString, *resp.CertificateArn)
+	log.Infof("[%s] acm: Imported certificate data in ACM with Arn = '%s'", domainsListString, aws.StringValue(resp.CertificateArn))
 
 	return nil
 }
@@ -95,7 +94,6 @@ func (a *ACM) findExistingCertificate(domains []string) (*acm.CertificateDetail,
 		MaxItems: aws.Int64(1000),
 	})
 	if err != nil {
-		fmt.Println("err", err)
 		return nil, errors.Wrap(err, "unable to list certificates")
 	}
 

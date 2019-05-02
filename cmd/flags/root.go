@@ -34,3 +34,17 @@ func AddPersistentStringFlag(c *cobra.Command, flag string, value string, descri
 		c.MarkPersistentFlagRequired(flag)
 	}
 }
+
+// AddPersistentBoolFlag adds a bool flag to the command
+func AddPersistentBoolFlag(c *cobra.Command, flag string, value bool, description string, isRequired bool) {
+	req := ""
+	if isRequired {
+		req = " (required)"
+	}
+
+	c.PersistentFlags().Bool(flag, value, fmt.Sprintf("%s%s", description, req))
+
+	if isRequired {
+		c.MarkPersistentFlagRequired(flag)
+	}
+}
