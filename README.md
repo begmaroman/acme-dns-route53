@@ -194,17 +194,18 @@ If you'd like to change config directory, set the desired path using **`--config
    
    ```bash
     $ aws lambda create-function --function-name acme-dns-route53 --runtime go1.x \
-    --role arn:aws:iam::account-id:role/lambda-acme-dns-route53-executor \
+    --role arn:aws:iam::<AWS_ACCOUNT_ID>:role/lambda-acme-dns-route53-executor \
     --handler acme-dns-route53 --zip-file ~/acme-dns-route53.zip
    ```
    
 5. So there it is. Our lambda function has been deployed and is now ready to use. 
-   You can try it out by using the `aws lambda invoke` command (which requires you to specify an output file for the response — I've used /tmp/output.json in the snippet below).
+   You can try it out by using the `aws lambda invoke` command (which requires you to specify an output file for the response — I've used `/tmp/output.json` in the snippet below).
    
    ```bash
    $ aws lambda invoke --function-name acme-dns-route53 /tmp/output.json
-   $ cat /tmp/output.json
    ```
+   
+   Then check logs on AWS CloudWatch, and obtained certificates on Amazon Certificate Manager.
    
 ### Links:
 
