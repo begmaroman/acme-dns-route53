@@ -196,6 +196,9 @@ If you'd like to change config directory, set the desired path using **`--config
     $ aws lambda create-function --function-name acme-dns-route53 --runtime go1.x \
     --role arn:aws:iam::<AWS_ACCOUNT_ID>:role/lambda-acme-dns-route53-executor \
     --environment Variables="{AWS_LAMBDA=1}" \
+    --vpc-config SubnetIds=[comma-separated-vpc-subnet-ids],SecurityGroupIds=[comma-separated-security-group-ids] \
+    --memory-size 1024 \
+    --timeout 900 \
     --handler acme-dns-route53 \
     --zip-file fileb://~/acme-dns-route53.zip
 
@@ -227,6 +230,7 @@ If you'd like to change config directory, set the desired path using **`--config
    | `domains` | []string |Comma-separated domains list|
    | `email`   | string   |Let's Encrypt Email|
    | `staging` | bool     |`true` for Let's Encrypt staging environment, and `false` for production one|
+   
    Example of JSON configuration:
    
    ```json
