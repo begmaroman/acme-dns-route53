@@ -3,6 +3,7 @@ module github.com/begmaroman/acme-dns-route53
 go 1.12
 
 require (
+	github.com/aws/aws-lambda-go v1.10.0
 	github.com/aws/aws-sdk-go v1.19.19
 	github.com/cenkalti/backoff v2.1.1+incompatible // indirect
 	github.com/go-acme/lego v2.5.0+incompatible
