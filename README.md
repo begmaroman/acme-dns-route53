@@ -196,29 +196,44 @@ If you'd like to change config directory, set the desired path using **`--config
     $ aws lambda create-function --function-name acme-dns-route53 --runtime go1.x \
     --role arn:aws:iam::<AWS_ACCOUNT_ID>:role/lambda-acme-dns-route53-executor \
     --environment Variables="{AWS_LAMBDA=1}" \
-    --vpc-config SubnetIds=[comma-separated-vpc-subnet-ids],SecurityGroupIds=[comma-separated-security-group-ids] \
+    --vpc-config SubnetIds=[comma-separated-subnet-ids],SecurityGroupIds=[comma-separated-security-group-ids] \
     --memory-size 1024 \
     --timeout 900 \
     --handler acme-dns-route53 \
     --zip-file fileb://~/acme-dns-route53.zip
 
     {
+        "FunctionName": "acme-dns-route53", 
+        "LastModified": "2019-05-03T19:07:09.325+0000", 
+        "RevisionId": "e3fadec9-2180-4bff-bb9a-999b1b71a558", 
+        "MemorySize": 1024, 
+        "Environment": {
+            "Variables": {
+                "AWS_LAMBDA": "1"
+            }
+        }, 
+        "Version": "$LATEST", 
+        "Role": "arn:aws:iam::<AWS_ACCOUNT_ID>:role/lambda-acme-dns-route53-executor", 
+        "Timeout": 900, 
+        "Runtime": "go1.x", 
         "TracingConfig": {
             "Mode": "PassThrough"
         }, 
-        "CodeSha256": "xsKLMWWIjlcKw0NxVfP+RSDvNLc1U80zCGicaIIjVsY=", 
-        "FunctionName": "acme-dns-route53", 
-        "CodeSize": 8468787, 
-        "RevisionId": "53160e8d-eaa4-45f5-9f4f-51eb6df9a1b0", 
-        "MemorySize": 128, 
+        "CodeSha256": "+2KgE5mh5LGaOsni36pdmPP9O35wgZ6TbddspyaIXXw=", 
+        "Description": "", 
+        "VpcConfig": {
+            "SubnetIds": [
+                "subnet-id-1", 
+                "subnet-id-2"
+            ], 
+            "VpcId": "vpc-id", 
+            "SecurityGroupIds": [
+                "sg-id-1"
+            ]
+        }, 
+        "CodeSize": 8456317, 
         "FunctionArn": "arn:aws:lambda:us-east-1:<AWS_ACCOUNT_ID>:function:acme-dns-route53", 
-        "Version": "$LATEST", 
-        "Role": "arn:aws:iam::<AWS_ACCOUNT_ID>:role/AWSLambdaPolicy-LetsEncrypt", 
-        "Timeout": 3, 
-        "LastModified": "2019-05-03T18:27:35.232+0000", 
-        "Handler": "acme-dns-route53", 
-        "Runtime": "go1.x", 
-        "Description": ""
+        "Handler": "acme-dns-route53"
     }
    ```
    
