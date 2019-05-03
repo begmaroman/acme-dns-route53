@@ -192,17 +192,58 @@ If you'd like to change config directory, set the desired path using **`--config
 4. Now we're ready to actually deploy the lambda function to AWS, which we can do using the `aws lambda create-function` command.
    Go ahead and try deploying it:
    
-   ```bash
+   ```
     $ aws lambda create-function --function-name acme-dns-route53 --runtime go1.x \
     --role arn:aws:iam::<AWS_ACCOUNT_ID>:role/lambda-acme-dns-route53-executor \
-    --handler acme-dns-route53 --zip-file ~/acme-dns-route53.zip
+    --environment Variables="{AWS_LAMBDA=1}" \
+    --handler acme-dns-route53 \
+    --zip-file fileb://~/acme-dns-route53.zip
+
+    {
+        "TracingConfig": {
+            "Mode": "PassThrough"
+        }, 
+        "CodeSha256": "xsKLMWWIjlcKw0NxVfP+RSDvNLc1U80zCGicaIIjVsY=", 
+        "FunctionName": "acme-dns-route53", 
+        "CodeSize": 8468787, 
+        "RevisionId": "53160e8d-eaa4-45f5-9f4f-51eb6df9a1b0", 
+        "MemorySize": 128, 
+        "FunctionArn": "arn:aws:lambda:us-east-1:<AWS_ACCOUNT_ID>:function:acme-dns-route53", 
+        "Version": "$LATEST", 
+        "Role": "arn:aws:iam::<AWS_ACCOUNT_ID>:role/AWSLambdaPolicy-LetsEncrypt", 
+        "Timeout": 3, 
+        "LastModified": "2019-05-03T18:27:35.232+0000", 
+        "Handler": "acme-dns-route53", 
+        "Runtime": "go1.x", 
+        "Description": ""
+    }
    ```
    
 5. So there it is. Our lambda function has been deployed and is now ready to use. 
+   First, needs to create JSON string with a configuration. Configuration structure:
+   
+   | Field     | Type     | Description |
+   |-----------|----------|-------------|
+   | `domains` | []string |Comma-separated domains list|
+   | `email`   | string   |Let's Encrypt Email|
+   | `staging` | bool     |`true` for Let's Encrypt staging environment, and `false` for production one|
+   Example of JSON configuration:
+   
+   ```json
+   { 
+     "domains":["acme-test.dev.dbp.dbg-pdl.de","acme-test1.dev.dbp.dbg-pdl.de"],
+     "email":"begmaroman@gmail.com",
+     "staging":true
+   }
+   ```
+   
    You can try it out by using the `aws lambda invoke` command (which requires you to specify an output file for the response — I've used `/tmp/output.json` in the snippet below).
    
    ```bash
-   $ aws lambda invoke --function-name acme-dns-route53 /tmp/output.json
+   $ aws lambda invoke \
+    --function-name acme-dns-route53 \
+    --payload "{\"domains\":[\"yourdomain.com\"],\"email\":\"your@email.com\",\"staging\":true}"
+    /tmp/output.json
    ```
    
    Then check logs on AWS CloudWatch, and obtained certificates on Amazon Certificate Manager.

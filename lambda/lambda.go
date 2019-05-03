@@ -2,8 +2,6 @@ package lambda
 
 import (
 	"errors"
-	"os"
-	"strings"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -18,9 +16,6 @@ import (
 const (
 	// ConfigDir is the default configuration directory
 	ConfigDir = "/tmp"
-
-	// DomainsSeparator is the default domains separator
-	DomainsSeparator = ","
 )
 
 // AWSSession is the AWS session data
@@ -34,6 +29,13 @@ var (
 	ErrDomainsMissing = errors.New("domains list must not be filled")
 )
 
+// Params contains configuration data
+type Params struct {
+	Domains []string `json:"domains"`
+	Email   string   `json:"email"`
+	Staging bool     `json:"staging"`
+}
+
 func init() {
 	// Initialize logger
 	log.Logger = logrus.New()
@@ -46,34 +48,26 @@ func Init() {
 	lambda.Start(HandleLambdaEvent)
 }
 
-func HandleLambdaEvent() error {
+func HandleLambdaEvent(params Params) error {
 	// Domains list must not be empty
-	domains := strings.Split(os.Getenv("LETSENCRYPT_DOMAINS"), DomainsSeparator)
-	if len(domains) == 0 {
+	if len(params.Domains) == 0 {
 		return ErrDomainsMissing
 	}
 
 	// Email must be filled
-	email := os.Getenv("LETSENCRYPT_EMAIL")
-	if len(email) == 0 {
+	if len(params.Email) == 0 {
 		return ErrEmailMissing
 	}
 
-	// Check environment
-	var isStaging bool
-	if os.Getenv("LETSENCRYPT_STAGING") == "1" {
-		isStaging = true
-	}
-
 	certificateHandler := handler.NewCertificateHandler(
-		isStaging,
+		params.Staging,
 		acmstore.New(AWSSession),
 		route53.New(AWSSession),
 		ConfigDir,
 	)
 
-	for _, domain := range domains {
-		if err := certificateHandler.Obtain([]string{domain}, email); err != nil {
+	for _, domain := range params.Domains {
+		if err := certificateHandler.Obtain([]string{domain}, params.Email); err != nil {
 			logrus.Errorf("[%s] unable to obtain certificate: %s", domain, err)
 			continue
 		}
