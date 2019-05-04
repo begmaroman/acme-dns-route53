@@ -307,7 +307,9 @@ Community: [https://community.letsencrypt.org](https://community.letsencrypt.org
 
 Amazon Certificate Manager: [https://aws.amazon.com/certificate-manager](https://aws.amazon.com/certificate-manager)
 
-Route53 by Amazon: [https://aws.amazon.com/route53](https://aws.amazon.com/route53)
+Route53 by AWS: [https://aws.amazon.com/route53](https://aws.amazon.com/route53)
+
+Lambda by AWS: [https://aws.amazon.com/lambda](https://aws.amazon.com/lambda/)
 
 ACME spec: [http://ietf-wg-acme.github.io/acme/](http://ietf-wg-acme.github.io/acme/)
 
@@ -315,8 +317,9 @@ ACME spec: [http://ietf-wg-acme.github.io/acme/](http://ietf-wg-acme.github.io/a
 
 - [github.com/go-acme/lego](https://github.com/go-acme/lego) - Let's Encrypt client
 - [github.com/aws/aws-sdk-go](https://github.com/aws/aws-sdk-go) - AWS SDK to manage certificates
+- [github.com/aws/aws-lambda-go](https://github.com/aws/aws-lambda-go) - tools to help develop AWS Lambda functions.
 
 ### Inspired by:
 
 - [https://arkadiyt.com/2018/01/26/deploying-effs-certbot-in-aws-lambda/](https://arkadiyt.com/2018/01/26/deploying-effs-certbot-in-aws-lambda/)
-- Lego library - [https://github.com/go-acme/lego](https://github.com/go-acme/lego)
+- Let's Encrypt - [https://letsencrypt.org](https://letsencrypt.org)
