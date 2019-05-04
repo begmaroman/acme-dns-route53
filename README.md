@@ -1,4 +1,4 @@
-**acme-dns-route53** is the tool to obtain SSL certificates from [Let's Encrypt CA](https://letsencrypt.org/) using DNS-01 challenge with Route53 and Amazon Certificate Manager by [AWS](https://aws.amazon.com/).
+**acme-dns-route53** is the tool for obtaining SSL certificates from [Let's Encrypt CA](https://letsencrypt.org/) using DNS-01 challenge with Route53 and Amazon Certificate Manager by [AWS](https://aws.amazon.com/).
 
 ### Features:
 
@@ -18,7 +18,7 @@ Make sure that [GoLang](https://golang.org/doc/install) already installed
     
 ### Credentials:
 
-Use of this tool requires a configuration file containing Amazon Web Sevices API credentials for an account with the following permissions:
+Use of this tool requires a configuration file containing Amazon Web Services API credentials for an account with the following permissions:
 
 - `route53:ListHostedZones`
 - `route53:GetChange`
@@ -109,6 +109,38 @@ If you'd like to change config directory, set the desired path using **`--config
     ```
     
 ### Usage by AWS Lambda:
+
+#### Setting up the AWS CLI:
+
+1. Throughout this instruction, we'll use the AWS CLI (command line interface) to configure our lambda functions and other AWS services. 
+   Installation and basic usage instructions can be found [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html), but if you’re using a Debian-based system like Ubuntu you can install the CLI with apt and run it using the aws command:
+
+   ```bash
+   $ sudo apt install awscli
+   $ aws --version
+   aws-cli/1.16.47 Python/3.6.3 Linux/4.15.0-47-generic botocore/1.12.37
+   ```
+   
+2. Next we need to set up an AWS IAM user with *programmatic access permission* for the CLI to use. 
+   A guide on how to do this can be found [here](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html). 
+   For testing purposes you can attach the all-powerful `AdministratorAccess` managed policy to this user, but in practice I would recommend using a more restrictive policy. 
+   At the end of setting up the user you'll be given a *access key ID* and *secret access key*. 
+   Make a note of these — you’ll need them in the next step.
+   
+3. Configure the CLI to use the credentials of the IAM user you've just created using the `aws configure` command. 
+   You’ll also need to specify the [default region](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html) and [output format](https://docs.aws.amazon.com/cli/latest/userguide/controlling-output.html) you want the CLI to use.
+
+   ```bash
+   $ aws configure
+   AWS Access Key ID [None]: access-key-ID
+   AWS Secret Access Key [None]: secret-access-key
+   Default region name [None]: us-east-1
+   Default output format [None]: json
+   ```
+
+   (Throughout this instruction, I'll assume you're using the `us-east-1` region — you'll need to change the code snippets accordingly if you're using a different region.)
+
+#### Creating and deploying an Lambda function:
 
 1. The first step is to build an executable from remote repo using `go install`:
     ```bash
