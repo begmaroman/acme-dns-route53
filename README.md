@@ -177,6 +177,9 @@ If you'd like to change config directory, set the desired path using **`--config
                "Effect": "Allow",
                "Action": [
                    "route53:ListHostedZones",
+                   "logs:PutLogEvents",
+                   "logs:CreateLogStream",
+                   "logs:CreateLogGroup",
                    "cloudwatch:PutMetricData",
                    "acm:ImportCertificate",
                    "acm:ListCertificates"
@@ -222,6 +225,7 @@ If you'd like to change config directory, set the desired path using **`--config
    Note: you can find a list of other permission policies that might be useful [here](https://docs.aws.amazon.com/lambda/latest/dg/lambda-permissions.html#lambda-intro-execution-role).
    
 4. Now we're ready to actually deploy the lambda function to AWS, which we can do using the `aws lambda create-function` command.
+   Also, `cme-dns-route53` tool expects `AWS_LAMBDA` environment variable with value `1` which adjusts the tool for using inside Lambda function.
    Go ahead and try deploying it:
    
    ```

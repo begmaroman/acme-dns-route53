@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	"github.com/begmaroman/acme-dns-route53/certstore/acmstore"
 	"github.com/begmaroman/acme-dns-route53/cmd/flags"
 	"github.com/begmaroman/acme-dns-route53/handler"
 )
@@ -14,14 +17,22 @@ var certificateObtainCmd = &cobra.Command{
 	Short: "Obtain SSL certificates",
 	Long:  `This command creates new SSL certificates or renews existing ones for the given domains using the given parameters.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Inits arguments
-		isStaging := flags.GetStagingFlagValue(cmd)
+		// Inits needed parameters
 		domains := flags.GetDomainsFlagValue(cmd)
 		email := flags.GetEmailFlagValue(cmd)
-		configPath := flags.GetConfigPathFlagValue(cmd)
+
+		// Create handler options
+		certificateHandlerOpts := &handler.CertificateHandlerOptions{
+			ConfigDir: flags.GetConfigPathFlagValue(cmd),
+			Staging:   flags.GetStagingFlagValue(cmd),
+			Log:       logrus.New(),
+			SNS:       sns.New(AWSSession),      // Initialize SNS API client
+			R53:       route53.New(AWSSession),  // Initialize Route53 API client
+			Store:     acmstore.New(AWSSession), // Initialize ACM client
+		}
 
 		// Create a new certificates handler
-		h := handler.NewCertificateHandler(isStaging, CertStore, Route53, configPath)
+		h := handler.NewCertificateHandler(certificateHandlerOpts)
 
 		for _, domain := range domains {
 			if err := h.Obtain([]string{domain}, email); err != nil {

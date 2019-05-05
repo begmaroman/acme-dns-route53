@@ -45,13 +45,12 @@ func (h *CertificateHandler) Obtain(domains []string, email string) error {
 	}
 
 	// Create a new request to obtain certificate
-	request := certificate.ObtainRequest{
+	crt, err := client.Certificate.Obtain(certificate.ObtainRequest{
 		Domains:    domains,
 		PrivateKey: nil,
 		Bundle:     true,
 		MustStaple: false,
-	}
-	crt, err := client.Certificate.Obtain(request)
+	})
 	if err != nil {
 		return errors.Wrap(err, "unable to obtain certificate")
 	}
@@ -61,9 +60,11 @@ func (h *CertificateHandler) Obtain(domains []string, email string) error {
 		return errors.Wrap(err, "unable to store certificates")
 	}
 
+	// TODO: Implement SNS notification
+
 	// Store user's private key into config file by the config path
 	if err := certUser.StorePrivateKey(h.configDir); err != nil {
-		return errors.Wrap(err, "unable to store user's private key")
+		h.log.Errorln("unable to store user's private key:", err)
 	}
 
 	return nil
