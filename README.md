@@ -243,7 +243,7 @@ If you'd like to change config directory, set the desired path using **`--config
       - `AWS_LAMBDA` environment variable with value `1` which adjusts the tool for using inside Lambda function.
       - `1024` MB as memory limit (can be changed if needed).
       - `900` secs (15 min) is the maximum timeout.
-      - `acme-dns-route53` is the hendler name of the lambda function
+      - `acme-dns-route53` is the handler name of the lambda function
       - `fileb://~/acme-dns-route53.zip` is the created `.zip` file above.
       
    Go ahead and try deploying it:
