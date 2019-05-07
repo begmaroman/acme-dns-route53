@@ -33,7 +33,7 @@ Amazon provides [information about managing](https://docs.aws.amazon.com/Route53
 *Example AWS policy file:*
 ```json
 {
-    "Version": "2019-05-01",
+    "Version": "2012-10-17",
     "Statement": [
         {
             "Sid": "",
@@ -170,7 +170,7 @@ If you'd like to change config directory, set the desired path using **`--config
    ```
    ```json
    {
-       "Version": "2019-05-01",
+       "Version": "2012-10-17",
        "Statement": [
            {
                "Sid": "",
@@ -225,14 +225,20 @@ If you'd like to change config directory, set the desired path using **`--config
    Note: you can find a list of other permission policies that might be useful [here](https://docs.aws.amazon.com/lambda/latest/dg/lambda-permissions.html#lambda-intro-execution-role).
    
 4. Now we're ready to actually deploy the lambda function to AWS, which we can do using the `aws lambda create-function` command.
-   Also, `cme-dns-route53` tool expects `AWS_LAMBDA` environment variable with value `1` which adjusts the tool for using inside Lambda function.
+   Also, `cme-dns-route53` tool expects the following configuration:
+   
+      - `AWS_LAMBDA` environment variable with value `1` which adjusts the tool for using inside Lambda function.
+      - `1024` MB as memory limit (can be changed if needed).
+      - `900` secs (15 min) is the maximum timeout.
+      - `acme-dns-route53` is the hendler name of the lambda function
+      - `fileb://~/acme-dns-route53.zip` is the created `.zip` file above.
+      
    Go ahead and try deploying it:
    
    ```
     $ aws lambda create-function --function-name acme-dns-route53 --runtime go1.x \
     --role arn:aws:iam::<AWS_ACCOUNT_ID>:role/lambda-acme-dns-route53-executor \
     --environment Variables="{AWS_LAMBDA=1}" \
-    --vpc-config SubnetIds=[comma-separated-subnet-ids],SecurityGroupIds=[comma-separated-security-group-ids] \
     --memory-size 1024 \
     --timeout 900 \
     --handler acme-dns-route53 \
@@ -256,17 +262,7 @@ If you'd like to change config directory, set the desired path using **`--config
             "Mode": "PassThrough"
         }, 
         "CodeSha256": "+2KgE5mh5LGaOsni36pdmPP9O35wgZ6TbddspyaIXXw=", 
-        "Description": "", 
-        "VpcConfig": {
-            "SubnetIds": [
-                "subnet-id-1", 
-                "subnet-id-2"
-            ], 
-            "VpcId": "vpc-id", 
-            "SecurityGroupIds": [
-                "sg-id-1"
-            ]
-        }, 
+        "Description": "",
         "CodeSize": 8456317, 
         "FunctionArn": "arn:aws:lambda:us-east-1:<AWS_ACCOUNT_ID>:function:acme-dns-route53", 
         "Handler": "acme-dns-route53"
@@ -286,8 +282,8 @@ If you'd like to change config directory, set the desired path using **`--config
    
    ```json
    { 
-     "domains":["acme-test.dev.dbp.dbg-pdl.de","acme-test1.dev.dbp.dbg-pdl.de"],
-     "email":"begmaroman@gmail.com",
+     "domains":["example1.com","example2.com"],
+     "email":"your@email.com",
      "staging":true
    }
    ```
