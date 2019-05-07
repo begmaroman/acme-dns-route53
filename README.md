@@ -173,13 +173,25 @@ If you'd like to change config directory, set the desired path using **`--config
        "Version": "2012-10-17",
        "Statement": [
            {
+               "Effect": "Allow",
+               "Action": [
+                   "logs:CreateLogGroup"
+               ],
+               "Resource": "arn:aws:logs:<AWS_REGION>:<AWS_ACCOUNT_ID>:*"
+           },
+           {
+               "Effect": "Allow",
+               "Action": [
+                   "logs:PutLogEvents",
+                   "logs:CreateLogStream"
+               ],
+               "Resource": "arn:aws:logs:<AWS_REGION>:<AWS_ACCOUNT_ID>:log-group:/aws/lambda/acme-dns-route53:*"
+           },
+           {
                "Sid": "",
                "Effect": "Allow",
                "Action": [
                    "route53:ListHostedZones",
-                   "logs:PutLogEvents",
-                   "logs:CreateLogStream",
-                   "logs:CreateLogGroup",
                    "cloudwatch:PutMetricData",
                    "acm:ImportCertificate",
                    "acm:ListCertificates"
@@ -196,9 +208,10 @@ If you'd like to change config directory, set the desired path using **`--config
                    "acm:DescribeCertificate"
                ],
                "Resource": [
-                   "arn:aws:route53:::hostedzone/<HOSTED_ZONE_ID>",
+                   "arn:aws:sns:${var.region}:<AWS_ACCOUNT_ID>:alarm_topic",
+                   "arn:aws:route53:::hostedzone/*",
                    "arn:aws:route53:::change/*",
-                   "arn:aws:acm:us-east-1:<AWS_ACCOUNT_ID>:certificate/*"
+                   "arn:aws:acm:<AWS_REGION>:<AWS_ACCOUNT_ID>:certificate/*"
                ]
            }
        ]
