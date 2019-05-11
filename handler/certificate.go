@@ -2,12 +2,12 @@ package handler
 
 import (
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/go-acme/lego/certcrypto"
 	"github.com/go-acme/lego/registration"
 	"github.com/sirupsen/logrus"
 
 	"github.com/begmaroman/acme-dns-route53/certstore"
+	"github.com/begmaroman/acme-dns-route53/notifier"
 )
 
 // CertificateHandlerOptions is the options of certificate handler
@@ -15,8 +15,8 @@ type CertificateHandlerOptions struct {
 	Staging   bool
 	ConfigDir string
 	Store     certstore.CertStore
+	SNS       notifier.Notifier
 	R53       *route53.Route53
-	SNS       *sns.SNS
 	Log       *logrus.Logger
 }
 
@@ -26,7 +26,7 @@ type CertificateHandler struct {
 	configDir string
 
 	store certstore.CertStore
-	sns   *sns.SNS
+	sns   notifier.Notifier
 	r53   *route53.Route53
 	log   *logrus.Logger
 }

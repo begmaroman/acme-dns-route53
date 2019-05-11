@@ -9,6 +9,7 @@ import (
 	"github.com/begmaroman/acme-dns-route53/certstore/acmstore"
 	"github.com/begmaroman/acme-dns-route53/cmd/flags"
 	"github.com/begmaroman/acme-dns-route53/handler"
+	"github.com/begmaroman/acme-dns-route53/notifier/awsns"
 )
 
 // certificateObtainCmd represents the certificate obtaining command
@@ -26,9 +27,9 @@ var certificateObtainCmd = &cobra.Command{
 			ConfigDir: flags.GetConfigPathFlagValue(cmd),
 			Staging:   flags.GetStagingFlagValue(cmd),
 			Log:       logrus.New(),
-			SNS:       sns.New(AWSSession),      // Initialize SNS API client
-			R53:       route53.New(AWSSession),  // Initialize Route53 API client
-			Store:     acmstore.New(AWSSession), // Initialize ACM client
+			SNS:       awsns.New(sns.New(AWSSession)), // Initialize SNS API client
+			R53:       route53.New(AWSSession),        // Initialize Route53 API client
+			Store:     acmstore.New(AWSSession),       // Initialize ACM client
 		}
 
 		// Create a new certificates handler

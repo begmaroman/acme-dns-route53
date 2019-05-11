@@ -9,6 +9,7 @@ import (
 
 	"github.com/begmaroman/acme-dns-route53/certstore/acmstore"
 	"github.com/begmaroman/acme-dns-route53/handler"
+	"github.com/begmaroman/acme-dns-route53/notifier/awsns"
 )
 
 const (
@@ -24,39 +25,41 @@ var (
 	ErrDomainsMissing = errors.New("domains list must not be filled")
 )
 
-// Params contains configuration data
-type Params struct {
+// Payload contains payload data
+type Payload struct {
 	Domains []string `json:"domains"`
 	Email   string   `json:"email"`
-	Staging bool     `json:"staging"`
+	Staging string   `json:"staging"`
 }
 
-func HandleLambdaEvent(params Params) error {
+func HandleLambdaEvent(payload Payload) error {
+	conf := InitConfig(payload)
+
 	// Domains list must not be empty
-	if len(params.Domains) == 0 {
+	if len(conf.Domains) == 0 {
 		return ErrDomainsMissing
 	}
 
 	// Email must be filled
-	if len(params.Email) == 0 {
+	if len(conf.Email) == 0 {
 		return ErrEmailMissing
 	}
 
 	// Create options
 	certificateHandlerOpts := &handler.CertificateHandlerOptions{
 		ConfigDir: ConfigDir,
-		Staging:   params.Staging,
+		Staging:   conf.Staging,
 		Log:       logrus.New(),
-		SNS:       sns.New(AWSSession),      // Initialize SNS API client
-		R53:       route53.New(AWSSession),  // Initialize Route53 API client
-		Store:     acmstore.New(AWSSession), // Initialize ACM client
+		SNS:       awsns.New(sns.New(AWSSession)), // Initialize SNS API client
+		R53:       route53.New(AWSSession),        // Initialize Route53 API client
+		Store:     acmstore.New(AWSSession),       // Initialize ACM client
 	}
 
 	// Create a new handler
 	certificateHandler := handler.NewCertificateHandler(certificateHandlerOpts)
 
-	for _, domain := range params.Domains {
-		if err := certificateHandler.Obtain([]string{domain}, params.Email); err != nil {
+	for _, domain := range conf.Domains {
+		if err := certificateHandler.Obtain([]string{domain}, conf.Email); err != nil {
 			logrus.Errorf("[%s] unable to obtain certificate: %s", domain, err)
 			continue
 		}

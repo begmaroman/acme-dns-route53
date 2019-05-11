@@ -249,7 +249,9 @@ If you'd like to change config directory, set the desired path using **`--config
    Go ahead and try deploying it:
    
    ```
-    $ aws lambda create-function --function-name acme-dns-route53 --runtime go1.x \
+    $ aws lambda create-function \
+    --function-name acme-dns-route53 \
+    --runtime go1.x \
     --role arn:aws:iam::<AWS_ACCOUNT_ID>:role/lambda-acme-dns-route53-executor \
     --environment Variables="{AWS_LAMBDA=1}" \
     --memory-size 1024 \
@@ -287,9 +289,9 @@ If you'd like to change config directory, set the desired path using **`--config
    
    | Field     | Type     | Description |
    |-----------|----------|-------------|
-   | `domains` | []string |Comma-separated domains list|
-   | `email`   | string   |Let's Encrypt Email|
-   | `staging` | bool     |`true` for Let's Encrypt staging environment, and `false` for production one|
+   | `domains` | []string |Domains list|
+   | `email`   | string   |[Let's Encrypt expiration Email](https://letsencrypt.org/docs/expiration-emails/)|
+   | `staging` | string   |`1` for Let's Encrypt staging environment, and `0` for production one|
    
    Example of JSON configuration:
    
@@ -297,7 +299,7 @@ If you'd like to change config directory, set the desired path using **`--config
    { 
      "domains":["example1.com","example2.com"],
      "email":"your@email.com",
-     "staging":true
+     "staging":"1"
    }
    ```
    
@@ -306,11 +308,20 @@ If you'd like to change config directory, set the desired path using **`--config
    ```bash
    $ aws lambda invoke \
     --function-name acme-dns-route53 \
-    --payload "{\"domains\":[\"yourdomain.com\"],\"email\":\"your@email.com\",\"staging\":true}"
+    --payload "{\"domains\":[\"yourdomain.com\"],\"email\":\"your@email.com\",\"staging\":\"1\"}"
     /tmp/output.json
    ```
    
    Then check logs on AWS CloudWatch, and obtained certificates on Amazon Certificate Manager.
+   
+   And one **important** thing is that you can pass the parameters above (`domains`,`email`,`staging`) via environment variables of the lambda function.
+   Environment variables has priority than payload.
+   Use the following environment variables to pass these parameters:
+    
+    - `DOMAINS` is the environment variable which contains comma-separated domains list. Equivalent to `domains` field in the payload object.
+    - `LETSENCRYPT_EMAIL` is the environment variable which contains [Let's Encrypt expiration Email](https://letsencrypt.org/docs/expiration-emails/). Equivalent to `email` field in the payload object.
+    - `STAGING` is the environment variable which must contain 1 value for using staging Let’s Encrypt environment or 0 for production environment. Equivalent to `staging` field in the payload object.
+   
    
 ### Links:
 

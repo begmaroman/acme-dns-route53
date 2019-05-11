@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/begmaroman/acme-dns-route53/utils/strsl"
 	"github.com/go-acme/lego/log"
 	"github.com/pkg/errors"
+
+	"github.com/begmaroman/acme-dns-route53/utils/strsl"
 )
 
 const (
@@ -33,7 +33,7 @@ func newR53ResourceWorker(r53 *route53.Route53) *r53ResourceWorker {
 // changeDNSRecord changed the record in DNS Route53 by the given params
 func (r *r53ResourceWorker) changeDNSRecord(action, domainName, value string) (string, error) {
 	// Retrieve a hosted zone ID
-	hostedZoneID, err := r.retrieveHostedZone(domainName)
+	hostedZoneID, err := r.getHostedZone(domainName)
 	if err != nil {
 		return "", errors.Wrapf(err, "unable to retrieve hosted zone ID for domain = '%s'", domainName)
 	}
@@ -77,41 +77,21 @@ func (r *r53ResourceWorker) changeDNSRecord(action, domainName, value string) (s
 	return *result.ChangeInfo.Id, nil
 }
 
-// retrieveHostedZone retrieves the zone id responsible a given FQDN.
+// getHostedZone retrieves the zone id responsible a given FQDN.
 // That is, the id for the zone whose name is the longest parent of the domain.
-func (r *r53ResourceWorker) retrieveHostedZone(domainName string) (string, error) {
+func (r *r53ResourceWorker) getHostedZone(domainName string) (string, error) {
 	zonesList, err := r.r53.ListHostedZones(nil)
 	if err != nil {
 		return "", errors.Wrap(err, "unable to list hosted zones")
 	}
 
-	var zones Zones
-	targetLabels := strings.Split(domainName, ".")
+	hostedZoneID := retrieveHostedZone(zonesList.HostedZones, domainName)
 
-	for _, zone := range zonesList.HostedZones {
-		// We canno work with a private zone
-		if *zone.Config.PrivateZone {
-			continue
-		}
-
-		if zone.Name == nil {
-			continue
-		}
-
-		candidateLabels := strings.Split(*zone.Name, ".")
-		if strsl.Equal(candidateLabels, targetLabels[len(targetLabels)-len(candidateLabels):]) {
-			zones = append(zones, zone)
-		}
-	}
-
-	if len(zones) == 0 {
+	if len(hostedZoneID) == 0 {
 		return "", errors.Errorf("unable to find a Route53 hosted zone for domain '%s'", domainName)
 	}
 
-	// Sort hosted zones
-	sort.Sort(zones)
-
-	return *zones[0].Id, nil
+	return hostedZoneID, nil
 }
 
 // waitForChange waits for a change to be propagated to all Route53 DNS servers
@@ -133,4 +113,41 @@ func (r *r53ResourceWorker) waitForChange(changeID string) error {
 	}
 
 	return nil
+}
+
+// retrieveHostedZone retrieves hosted zone ID for the given domain based on the given list
+func retrieveHostedZone(hostedZones []*route53.HostedZone, domainName string) string {
+	var zones Zones
+	targetLabels := strings.Split(domainName, ".")
+
+	for _, zone := range hostedZones {
+		// We cannon work with a private zone
+		if *zone.Config.PrivateZone {
+			continue
+		}
+
+		if zone.Name == nil {
+			continue
+		}
+
+		candidateLabels := strings.Split(aws.StringValue(zone.Name), ".")
+
+		// Continue if the current hosted zone name рфы ьщку ыгивщьфшты
+		if len(candidateLabels) > len(targetLabels) {
+			continue
+		}
+
+		if strsl.Equal(candidateLabels, targetLabels[len(targetLabels)-len(candidateLabels):]) {
+			zones = append(zones, zone)
+		}
+	}
+
+	if len(zones) == 0 {
+		return ""
+	}
+
+	// Sort hosted zones
+	sort.Sort(zones)
+
+	return aws.StringValue(zones[0].Id)
 }
