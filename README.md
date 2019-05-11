@@ -159,7 +159,7 @@ If you'd like to change config directory, set the desired path using **`--config
 3. The next step is a bit awkward, but critical to getting our lambda function working properly. 
    We need to set up an IAM role which defines the permission that our lambda function will have when it is running. 
    
-   For now let's set up a `lambda-acme-dns-route53-executor` role and attach the `AWSLambdaVPCAccessExecutionRole` managed policy to it. 
+   For now let's set up a `lambda-acme-dns-route53-executor` role and attach the `AWSLambdaBasicExecutionRole` managed policy to it. 
    This will give our lambda function the basic permissions it need to run and log to the [AWS CloudWatch](https://aws.amazon.com/cloudwatch/) service.
    
    First we have to create a trust policy JSON file. 
@@ -228,17 +228,17 @@ If you'd like to change config directory, set the desired path using **`--config
    Make a note of the returned ARN (Amazon Resource Name) — you'll need this in the next step.
    
    Now the `lambda-acme-dns-route53-executor` role has been created we need to specify the permissions that the role has. 
-   The easiest way to do this it to use the `aws iam attach-role-policy` command, passing in the ARN of `AWSLambdaVPCAccessExecutionRole` permission policy like so:
+   The easiest way to do this it to use the `aws iam attach-role-policy` command, passing in the ARN of `AWSLambdaBasicExecutionRole` permission policy like so:
    
    ```bash
    $ aws iam attach-role-policy --role-name lambda-acme-dns-route53-executor \
-   --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+   --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
    ```
    
    Note: you can find a list of other permission policies that might be useful [here](https://docs.aws.amazon.com/lambda/latest/dg/lambda-permissions.html#lambda-intro-execution-role).
    
 4. Now we're ready to actually deploy the lambda function to AWS, which we can do using the `aws lambda create-function` command.
-   Also, `cme-dns-route53` tool expects the following configuration:
+   Also, The lambda function needs to be configured with the following options:
    
       - `AWS_LAMBDA` environment variable with value `1` which adjusts the tool for using inside Lambda function.
       - `1024` MB as memory limit (can be changed if needed).
