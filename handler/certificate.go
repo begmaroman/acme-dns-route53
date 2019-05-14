@@ -12,34 +12,39 @@ import (
 
 // CertificateHandlerOptions is the options of certificate handler
 type CertificateHandlerOptions struct {
-	Staging   bool
-	ConfigDir string
-	Store     certstore.CertStore
-	SNS       notifier.Notifier
-	R53       *route53.Route53
-	Log       *logrus.Logger
+	Staging           bool
+	ConfigDir         string
+	NotificationTopic string
+
+	Store    certstore.CertStore
+	Notifier notifier.Notifier
+	R53      *route53.Route53
+
+	Log *logrus.Logger
 }
 
 // CertificateHandler is the certificates handler
 type CertificateHandler struct {
-	isStaging bool
-	configDir string
+	isStaging         bool
+	configDir         string
+	notificationTopic string
 
-	store certstore.CertStore
-	sns   notifier.Notifier
-	r53   *route53.Route53
-	log   *logrus.Logger
+	store    certstore.CertStore
+	notifier notifier.Notifier
+	r53      *route53.Route53
+	log      *logrus.Logger
 }
 
 // NewCertificateHandler is the constructor of CertificateHandler
 func NewCertificateHandler(opts *CertificateHandlerOptions) *CertificateHandler {
 	return &CertificateHandler{
-		isStaging: opts.Staging,
-		store:     opts.Store,
-		sns:       opts.SNS,
-		r53:       opts.R53,
-		configDir: opts.ConfigDir,
-		log:       opts.Log,
+		isStaging:         opts.Staging,
+		store:             opts.Store,
+		notificationTopic: opts.NotificationTopic,
+		notifier:          opts.Notifier,
+		r53:               opts.R53,
+		configDir:         opts.ConfigDir,
+		log:               opts.Log,
 	}
 }
 

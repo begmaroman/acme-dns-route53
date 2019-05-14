@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/go-acme/lego/log"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 
 	"github.com/begmaroman/acme-dns-route53/utils/strsl"
 )
@@ -21,12 +21,14 @@ const (
 // r53ResourceWorker represents the functionality to work with Route53 API
 type r53ResourceWorker struct {
 	r53 *route53.Route53
+	log *logrus.Logger
 }
 
 // newR53ResourceWorker is the constructor of r53ResourceWorker
-func newR53ResourceWorker(r53 *route53.Route53) *r53ResourceWorker {
+func newR53ResourceWorker(r53 *route53.Route53, log *logrus.Logger) *r53ResourceWorker {
 	return &r53ResourceWorker{
 		r53: r53,
+		log: log,
 	}
 }
 
@@ -38,7 +40,7 @@ func (r *r53ResourceWorker) changeDNSRecord(action, domainName, value string) (s
 		return "", errors.Wrapf(err, "unable to retrieve hosted zone ID for domain = '%s'", domainName)
 	}
 
-	log.Infof("[%s] acme: Changing record (action '%s') in the zone with ID = '%s'", domainName, action, hostedZoneID)
+	r.log.Infof("[%s] acme: Changing record (action '%s') in the zone with ID = '%s'", domainName, action, hostedZoneID)
 
 	// Build comment for the current action
 	comment := buildDNSComment(action, domainName)

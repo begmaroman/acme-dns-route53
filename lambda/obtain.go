@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/sirupsen/logrus"
 
 	"github.com/begmaroman/acme-dns-route53/certstore/acmstore"
@@ -30,6 +29,7 @@ type Payload struct {
 	Domains []string `json:"domains"`
 	Email   string   `json:"email"`
 	Staging string   `json:"staging"`
+	Topic   string   `json:"topic"`
 }
 
 func HandleLambdaEvent(payload Payload) error {
@@ -47,12 +47,13 @@ func HandleLambdaEvent(payload Payload) error {
 
 	// Create options
 	certificateHandlerOpts := &handler.CertificateHandlerOptions{
-		ConfigDir: ConfigDir,
-		Staging:   conf.Staging,
-		Log:       logrus.New(),
-		SNS:       awsns.New(sns.New(AWSSession)), // Initialize SNS API client
-		R53:       route53.New(AWSSession),        // Initialize Route53 API client
-		Store:     acmstore.New(AWSSession),       // Initialize ACM client
+		ConfigDir:         ConfigDir,
+		Staging:           conf.Staging,
+		NotificationTopic: conf.Topic,
+		Log:               logrus.New(),                           // Create a new logger
+		Notifier:          awsns.New(AWSSession, logrus.New()),    // Initialize SNS API client
+		R53:               route53.New(AWSSession),                // Initialize Route53 API client
+		Store:             acmstore.New(AWSSession, logrus.New()), // Initialize ACM client
 	}
 
 	// Create a new handler
@@ -60,7 +61,7 @@ func HandleLambdaEvent(payload Payload) error {
 
 	for _, domain := range conf.Domains {
 		if err := certificateHandler.Obtain([]string{domain}, conf.Email); err != nil {
-			logrus.Errorf("[%s] unable to obtain certificate: %s", domain, err)
+			logrus.WithError(err).Errorf("[%s] unable to obtain certificate", domain)
 			continue
 		}
 

@@ -14,6 +14,9 @@ const (
 
 	// StagingEnvVar is the name of env var which contains 1 value for using staging Let’s Encrypt environment or 0 for production environment.
 	StagingEnvVar = "STAGING"
+
+	// TopicEnvVar is the name of env var which contains a topic for notification
+	TopicEnvVar = "NOTIFICATION_TOPIC"
 )
 
 // Config contains configuration data
@@ -21,6 +24,7 @@ type Config struct {
 	Domains []string
 	Email   string
 	Staging bool
+	Topic   string
 }
 
 // InitConfig initializes configuration of the lambda function
@@ -29,6 +33,7 @@ func InitConfig(payload Payload) *Config {
 		Domains: strings.Split(os.Getenv(DomainsEnvVar), ","),
 		Email:   os.Getenv(LetsEncryptEnvVar),
 		Staging: isStaging(os.Getenv(StagingEnvVar)),
+		Topic:   os.Getenv(TopicEnvVar),
 	}
 
 	// Load domains
@@ -44,6 +49,11 @@ func InitConfig(payload Payload) *Config {
 	// Load environment
 	if len(payload.Staging) > 0 {
 		config.Staging = isStaging(payload.Staging)
+	}
+
+	// Load notification topic
+	if len(payload.Topic) > 0 {
+		config.Topic = payload.Topic
 	}
 
 	return config

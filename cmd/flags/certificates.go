@@ -9,11 +9,13 @@ import (
 const (
 	domainsSeparator  = ","
 	defaultConfigPath = ""
+	defaultTopic      = ""
 
 	flagDomains    = "domains"
 	flagEmail      = "email"
 	flagConfigPath = "config-path"
 	flagStaging    = "staging"
+	flagTopic      = "topic"
 )
 
 // AddDomainsFlag adds the domains flag to the command
@@ -55,4 +57,14 @@ func AddStagingFlag(c *cobra.Command) {
 // GetStagingFlagValue gets the value of the staging flag from the command
 func GetStagingFlagValue(c *cobra.Command) bool {
 	return c.Flag(flagStaging).Value.String() == "true"
+}
+
+// AddTopicFlag adds the topic flag to the command
+func AddTopicFlag(c *cobra.Command) {
+	AddPersistentStringFlag(c, flagTopic, defaultTopic, "Provide SNS notification topic using --topic flag", false)
+}
+
+// GetTopicFlagValue gets the value of the topic flag from the command
+func GetTopicFlagValue(c *cobra.Command) string {
+	return c.Flag(flagTopic).Value.String()
 }

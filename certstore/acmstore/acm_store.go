@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/go-acme/lego/certificate"
-	"github.com/go-acme/lego/log"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 
 	"github.com/begmaroman/acme-dns-route53/certstore"
 	"github.com/begmaroman/acme-dns-route53/utils/strsl"
@@ -26,12 +26,14 @@ var _ certstore.CertStore = &acmStore{}
 // Used Amazon Certificate Manager to work with certificates
 type acmStore struct {
 	acm *acm.ACM
+	log *logrus.Logger
 }
 
 // New is the constructor of acmStore
-func New(provider client.ConfigProvider) certstore.CertStore {
+func New(provider client.ConfigProvider, log *logrus.Logger) certstore.CertStore {
 	return &acmStore{
-		acm: acm.New(provider, aws.NewConfig().WithRegion("eu-central-1")),
+		acm: acm.New(provider),
+		log: log,
 	}
 }
 
@@ -43,7 +45,7 @@ func (a *acmStore) Store(cert *certificate.Resource, domains []string) error {
 
 	domainsListString := strings.Join(domains, ", ")
 
-	log.Infof("[%s] acm: Retrieving server certificate", domainsListString)
+	a.log.Infof("[%s] acm: Retrieving server certificate", domainsListString)
 
 	// ioutil.WriteFile("cert.pem", cert.Certificate, 0666)
 
@@ -52,7 +54,7 @@ func (a *acmStore) Store(cert *certificate.Resource, domains []string) error {
 		return errors.Wrap(err, "unable to retrieve server certificate")
 	}
 
-	log.Infof("[%s] acm: Finding existing server certificate in ACM", domainsListString)
+	a.log.Infof("[%s] acm: Finding existing server certificate in ACM", domainsListString)
 
 	existingCert, err := a.findExistingCertificate(domains)
 	if err != nil {
@@ -66,7 +68,7 @@ func (a *acmStore) Store(cert *certificate.Resource, domains []string) error {
 	}
 
 	if certArn != nil {
-		log.Infof("[%s] acm: Found existing server certificate in ACM with Arn = '%s'", domainsListString, aws.StringValue(certArn))
+		a.log.Infof("[%s] acm: Found existing server certificate in ACM with Arn = '%s'", domainsListString, aws.StringValue(certArn))
 	}
 
 	// Init request parameters
@@ -82,7 +84,7 @@ func (a *acmStore) Store(cert *certificate.Resource, domains []string) error {
 		return errors.Wrap(err, "unable to store certificate into ACM")
 	}
 
-	log.Infof("[%s] acm: Imported certificate data in ACM with Arn = '%s'", domainsListString, aws.StringValue(resp.CertificateArn))
+	a.log.Infof("[%s] acm: Imported certificate data in ACM with Arn = '%s'", domainsListString, aws.StringValue(resp.CertificateArn))
 
 	return nil
 }

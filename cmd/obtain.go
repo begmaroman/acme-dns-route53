@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
@@ -24,12 +23,13 @@ var certificateObtainCmd = &cobra.Command{
 
 		// Create handler options
 		certificateHandlerOpts := &handler.CertificateHandlerOptions{
-			ConfigDir: flags.GetConfigPathFlagValue(cmd),
-			Staging:   flags.GetStagingFlagValue(cmd),
-			Log:       logrus.New(),
-			SNS:       awsns.New(sns.New(AWSSession)), // Initialize SNS API client
-			R53:       route53.New(AWSSession),        // Initialize Route53 API client
-			Store:     acmstore.New(AWSSession),       // Initialize ACM client
+			ConfigDir:         flags.GetConfigPathFlagValue(cmd),
+			Staging:           flags.GetStagingFlagValue(cmd),
+			NotificationTopic: flags.GetTopicFlagValue(cmd),
+			Log:               logrus.New(),                           // Create a new logger
+			Notifier:          awsns.New(AWSSession, logrus.New()),    // Initialize SNS API client
+			R53:               route53.New(AWSSession),                // Initialize Route53 API client
+			Store:             acmstore.New(AWSSession, logrus.New()), // Initialize ACM client
 		}
 
 		// Create a new certificates handler
@@ -53,6 +53,7 @@ func init() {
 	flags.AddEmailFlag(certificateObtainCmd)
 	flags.AddConfigPathFlag(certificateObtainCmd)
 	flags.AddStagingFlag(certificateObtainCmd)
+	flags.AddTopicFlag(certificateObtainCmd)
 
 	RootCmd.AddCommand(certificateObtainCmd)
 }
