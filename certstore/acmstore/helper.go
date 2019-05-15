@@ -46,6 +46,10 @@ func retrieveServerCertificate(list []byte) ([]byte, error) {
 
 // toCertificateDetails converts *acm.CertificateDetail to *certstore.CertificateDetails
 func toCertificateDetails(cert *acm.CertificateDetail) *certstore.CertificateDetails {
+	if cert == nil {
+		return nil
+	}
+
 	return &certstore.CertificateDetails{
 		NotAfter: aws.TimeValue(cert.NotAfter),
 	}
