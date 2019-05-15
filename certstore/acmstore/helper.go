@@ -5,7 +5,12 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 
+	"github.com/aws/aws-sdk-go/aws"
+
+	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/pkg/errors"
+
+	"github.com/begmaroman/acme-dns-route53/certstore"
 )
 
 // retrieveServerCertificate retrieves the server certificate from the given PEM encoded list
@@ -37,4 +42,11 @@ func retrieveServerCertificate(list []byte) ([]byte, error) {
 	}
 
 	return crt.Bytes(), nil
+}
+
+// toCertificateDetails converts *acm.CertificateDetail to *certstore.CertificateDetails
+func toCertificateDetails(cert *acm.CertificateDetail) *certstore.CertificateDetails {
+	return &certstore.CertificateDetails{
+		NotAfter: aws.TimeValue(cert.NotAfter),
+	}
 }

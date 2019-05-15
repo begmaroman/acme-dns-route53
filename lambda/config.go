@@ -2,7 +2,13 @@ package lambda
 
 import (
 	"os"
+	"strconv"
 	"strings"
+)
+
+const (
+	// DefaultRenewBefore is the default value of RENEW_BEFORE env var
+	DefaultRenewBefore = 30
 )
 
 const (
@@ -17,23 +23,33 @@ const (
 
 	// TopicEnvVar is the name of env var which contains a topic for notification
 	TopicEnvVar = "NOTIFICATION_TOPIC"
+
+	// RenewBeforeEnvVar is the name of env var which contains the number of days defining the period before expiration within which a certificate must be renewed
+	RenewBeforeEnvVar = "RENEW_BEFORE"
 )
 
 // Config contains configuration data
 type Config struct {
-	Domains []string
-	Email   string
-	Staging bool
-	Topic   string
+	Domains     []string
+	Email       string
+	Staging     bool
+	Topic       string
+	RenewBefore int
 }
 
 // InitConfig initializes configuration of the lambda function
 func InitConfig(payload Payload) *Config {
+	renewBefore, err := strconv.Atoi(os.Getenv(RenewBeforeEnvVar))
+	if err != nil {
+		renewBefore = DefaultRenewBefore
+	}
+
 	config := &Config{
-		Domains: strings.Split(os.Getenv(DomainsEnvVar), ","),
-		Email:   os.Getenv(LetsEncryptEnvVar),
-		Staging: isStaging(os.Getenv(StagingEnvVar)),
-		Topic:   os.Getenv(TopicEnvVar),
+		Domains:     strings.Split(os.Getenv(DomainsEnvVar), ","),
+		Email:       os.Getenv(LetsEncryptEnvVar),
+		Staging:     isStaging(os.Getenv(StagingEnvVar)),
+		Topic:       os.Getenv(TopicEnvVar),
+		RenewBefore: renewBefore,
 	}
 
 	// Load domains
@@ -54,6 +70,11 @@ func InitConfig(payload Payload) *Config {
 	// Load notification topic
 	if len(payload.Topic) > 0 {
 		config.Topic = payload.Topic
+	}
+
+	// Load renew before days value
+	if payload.RenewBefore > 0 {
+		config.RenewBefore = payload.RenewBefore
 	}
 
 	return config

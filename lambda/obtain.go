@@ -26,10 +26,11 @@ var (
 
 // Payload contains payload data
 type Payload struct {
-	Domains []string `json:"domains"`
-	Email   string   `json:"email"`
-	Staging string   `json:"staging"`
-	Topic   string   `json:"topic"`
+	Domains     []string `json:"domains"`
+	Email       string   `json:"email"`
+	Staging     string   `json:"staging"`
+	Topic       string   `json:"topic"`
+	RenewBefore int      `json:"renew_before"`
 }
 
 func HandleLambdaEvent(payload Payload) error {
@@ -50,6 +51,7 @@ func HandleLambdaEvent(payload Payload) error {
 		ConfigDir:         ConfigDir,
 		Staging:           conf.Staging,
 		NotificationTopic: conf.Topic,
+		RenewBefore:       conf.RenewBefore,
 		Log:               logrus.New(),                           // Create a new logger
 		Notifier:          awsns.New(AWSSession, logrus.New()),    // Initialize SNS API client
 		R53:               route53.New(AWSSession),                // Initialize Route53 API client
@@ -64,8 +66,6 @@ func HandleLambdaEvent(payload Payload) error {
 			logrus.WithError(err).Errorf("[%s] unable to obtain certificate", domain)
 			continue
 		}
-
-		logrus.Infof("[%s] certificate successfully obtained and stored", domain)
 	}
 
 	return nil

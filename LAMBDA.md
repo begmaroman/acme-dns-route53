@@ -189,12 +189,13 @@ Go ahead and try deploying it:
 So there it is. Our lambda function has been deployed and is now ready to use. 
 First, needs to create JSON string with a configuration. Configuration structure:
 
-| Field     | Type     | Description  |
-|-----------|----------|--------------|
-| `domains` | []string | Domains list |
-| `email`   | string   | [Let's Encrypt expiration Email](https://letsencrypt.org/docs/expiration-emails/) |
-| `staging` | string   | `1` for Let's Encrypt staging environment, and `0` for production one |
-| `topic`   | string   | SNS Notification Topic ARN (optional) |
+| Field            | Type     | Description  |
+|------------------|----------|--------------|
+| `domains`        | []string | Domains list |
+| `email`          | string   | [Let's Encrypt expiration Email](https://letsencrypt.org/docs/expiration-emails/) |
+| `staging`        | string   | `1` for Let's Encrypt staging environment, and `0` for production one |
+| `topic`          | string   | SNS Notification Topic ARN (optional) |
+| `renew_before`   | int      | The number of days defining the period before expiration within which a certificate must be renewed |
 
 Example of JSON configuration:
 
@@ -203,7 +204,8 @@ Example of JSON configuration:
   "domains":["example1.com","example2.com"],
   "email":"your@email.com",
   "staging":"1",
-  "topic":"arn:aws:sns:<AWS_REGION>:<AWS_ACCOUNT_ID>:<SNS_TOPIC_NAME>"
+  "topic":"arn:aws:sns:<AWS_REGION>:<AWS_ACCOUNT_ID>:<SNS_TOPIC_NAME>",
+  "renew_before":7
 }
 ```
 
@@ -212,13 +214,13 @@ You can try it out by using the `aws lambda invoke` command (which requires you 
 ```bash
 $ aws lambda invoke \
  --function-name acme-dns-route53 \
- --payload "{\"domains\":[\"yourdomain.com\"],\"email\":\"your@email.com\",\"staging\":\"1\"}"
+ --payload "{\"domains\":[\"yourdomain.com\"],\"email\":\"your@email.com\",\"staging\":\"1\",\"topic\":\"arn:aws:sns:<AWS_REGION>:<AWS_ACCOUNT_ID>:<SNS_TOPIC_NAME>\",\"renew_before\":7}"
  /tmp/output.json
 ```
 
 Then check logs on AWS CloudWatch, and obtained certificates on Amazon Certificate Manager.
 
-And one **important** thing is that you can pass the parameters above (`domains`,`email`,`staging`) via environment variables of the lambda function.
+And one **important** thing is that you can pass the parameters above (`domains`,`email`,`staging` etc.) via environment variables of the lambda function.
 Environment variables has priority than payload.
 Use the following environment variables to pass these parameters:
  
@@ -226,3 +228,4 @@ Use the following environment variables to pass these parameters:
  - `LETSENCRYPT_EMAIL` is the environment variable which contains [Let's Encrypt expiration Email](https://letsencrypt.org/docs/expiration-emails/). Equivalent to `email` field in the payload object.
  - `STAGING` is the environment variable which must contain 1 value for using staging Let’s Encrypt environment or 0 for production environment. Equivalent to `staging` field in the payload object.
  - `NOTIFICATION_TOPIC` is the environment variable which contains SNS Notification Topic ARN.
+ - `RENEW_BEFORE` is the number of days defining the period before expiration within which a certificate must be renewed.

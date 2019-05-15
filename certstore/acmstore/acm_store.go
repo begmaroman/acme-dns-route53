@@ -47,8 +47,6 @@ func (a *acmStore) Store(cert *certificate.Resource, domains []string) error {
 
 	a.log.Infof("[%s] acm: Retrieving server certificate", domainsListString)
 
-	// ioutil.WriteFile("cert.pem", cert.Certificate, 0666)
-
 	serverCert, err := retrieveServerCertificate(cert.Certificate)
 	if err != nil {
 		return errors.Wrap(err, "unable to retrieve server certificate")
@@ -87,6 +85,16 @@ func (a *acmStore) Store(cert *certificate.Resource, domains []string) error {
 	a.log.Infof("[%s] acm: Imported certificate data in ACM with Arn = '%s'", domainsListString, aws.StringValue(resp.CertificateArn))
 
 	return nil
+}
+
+// Load loads certificate by the given domains
+func (a *acmStore) Load(domains []string) (*certstore.CertificateDetails, error) {
+	cert, err := a.findExistingCertificate(domains)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to find certificate")
+	}
+
+	return toCertificateDetails(cert), nil
 }
 
 // findExistingCertificate look ups a certificate in ACm by the given domains

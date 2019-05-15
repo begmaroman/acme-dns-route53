@@ -26,6 +26,7 @@ var certificateObtainCmd = &cobra.Command{
 			ConfigDir:         flags.GetConfigPathFlagValue(cmd),
 			Staging:           flags.GetStagingFlagValue(cmd),
 			NotificationTopic: flags.GetTopicFlagValue(cmd),
+			RenewBefore:       flags.GetRenewBeforeFlagValue(cmd) * 24,
 			Log:               logrus.New(),                           // Create a new logger
 			Notifier:          awsns.New(AWSSession, logrus.New()),    // Initialize SNS API client
 			R53:               route53.New(AWSSession),                // Initialize Route53 API client
@@ -40,8 +41,6 @@ var certificateObtainCmd = &cobra.Command{
 				logrus.Errorf("[%s] unable to obtain certificate: %s\n", domain, err)
 				continue
 			}
-
-			logrus.Infof("[%s] certificate successfully obtained and stored\n", domain)
 		}
 
 		return nil
@@ -54,6 +53,7 @@ func init() {
 	flags.AddConfigPathFlag(certificateObtainCmd)
 	flags.AddStagingFlag(certificateObtainCmd)
 	flags.AddTopicFlag(certificateObtainCmd)
+	flags.AddRenewBeforeFlag(certificateObtainCmd)
 
 	RootCmd.AddCommand(certificateObtainCmd)
 }

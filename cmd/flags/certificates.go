@@ -1,21 +1,24 @@
 package flags
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 const (
-	domainsSeparator  = ","
-	defaultConfigPath = ""
-	defaultTopic      = ""
+	domainsSeparator   = ","
+	defaultConfigPath  = ""
+	defaultTopic       = ""
+	defaultRenewBefore = 30
 
-	flagDomains    = "domains"
-	flagEmail      = "email"
-	flagConfigPath = "config-path"
-	flagStaging    = "staging"
-	flagTopic      = "topic"
+	flagDomains     = "domains"
+	flagEmail       = "email"
+	flagConfigPath  = "config-path"
+	flagStaging     = "staging"
+	flagTopic       = "topic"
+	flagRenewBefore = "renew-before"
 )
 
 // AddDomainsFlag adds the domains flag to the command
@@ -31,7 +34,7 @@ func GetDomainsFlagValue(c *cobra.Command) []string {
 
 // AddEmailFlag adds the email flag to the command
 func AddEmailFlag(c *cobra.Command) {
-	AddPersistentStringFlag(c, flagEmail, "", "The Email", true)
+	AddPersistentStringFlag(c, flagEmail, "", "E-mail address where Let's Encrypt will send certificate expiry notices to", true)
 }
 
 // GetEmailFlagValue gets the value of the email flag from the command
@@ -61,10 +64,25 @@ func GetStagingFlagValue(c *cobra.Command) bool {
 
 // AddTopicFlag adds the topic flag to the command
 func AddTopicFlag(c *cobra.Command) {
-	AddPersistentStringFlag(c, flagTopic, defaultTopic, "Provide SNS notification topic using --topic flag", false)
+	AddPersistentStringFlag(c, flagTopic, defaultTopic, "Provide SNS notification topic", false)
 }
 
 // GetTopicFlagValue gets the value of the topic flag from the command
 func GetTopicFlagValue(c *cobra.Command) string {
 	return c.Flag(flagTopic).Value.String()
+}
+
+// AddRenewBeforeFlag adds the renew-before flag to the command
+func AddRenewBeforeFlag(c *cobra.Command) {
+	AddPersistentIntFlag(c, flagRenewBefore, defaultRenewBefore, "The number of days defining the period before expiration within which a certificate must be renewed", false)
+}
+
+// GetRenewBeforeFlagValue gets the value of the renew-before flag from the command
+func GetRenewBeforeFlagValue(c *cobra.Command) int {
+	days, err := strconv.Atoi(c.Flag(flagRenewBefore).Value.String())
+	if err != nil {
+		return defaultRenewBefore
+	}
+
+	return days
 }

@@ -115,6 +115,11 @@ If you'd like to change config directory, set the desired path using **`--config
     $ acme-dns-route53 obtain --domains=<domains> --email=<email> --topic=arn:aws:sns:<AWS_REGION>:<AWS_ACCOUNT_ID>:<SNS_TOPIC_NAME>
     ```
     
+- Renew Before - is the number of days defining the period before expiration within which a certificate must be renewed:
+    ```sh
+    $ acme-dns-route53 obtain --domains=<domains> --email=<email> --renew-before=7
+    ```
+    
 ### Usage by AWS Lambda:
 
 For the latest information regarding usage by AWS Lambda see the [instruction](LAMBDA.md)

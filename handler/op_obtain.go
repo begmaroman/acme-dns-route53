@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/go-acme/lego/certificate"
 	"github.com/go-acme/lego/lego"
@@ -19,6 +20,19 @@ var (
 
 // Obtain creates a new SSL certificate or renews existing one for the given domains with the given email
 func (h *CertificateHandler) Obtain(domains []string, email string) error {
+	// Check if there is existing an certificate for the given domains
+	existingCert, err := h.store.Load(domains)
+	if err != nil {
+		return errors.Wrap(err, "unable to load existing certificate")
+	}
+
+	if existingCert != nil {
+		if sub := existingCert.NotAfter.Sub(time.Now()).Hours(); int(sub) > h.renewBefore {
+			h.log.Infof("left %d days to certificate will be expired", time.Duration(sub/24))
+			return nil
+		}
+	}
+
 	// Load user
 	certUser, err := getUser(h.toUserParams(email))
 	if err != nil {
@@ -65,7 +79,7 @@ func (h *CertificateHandler) Obtain(domains []string, email string) error {
 
 	// Notify that the certificate has been obtained for the given domains
 	if len(h.notificationTopic) > 0 {
-		if err := h.notifier.Notify(h.notificationTopic, fmt.Sprintf("[%s] certificate successfully obtained", strings.Join(domains, ", "))); err != nil {
+		if err := h.notifier.Notify(h.notificationTopic, fmt.Sprintf("Certificates for the following domains successfully obtained: %s", strings.Join(domains, ", "))); err != nil {
 			h.log.WithError(err).Error("failed to publish notification")
 		}
 	}
@@ -74,6 +88,8 @@ func (h *CertificateHandler) Obtain(domains []string, email string) error {
 	if err := certUser.StorePrivateKey(h.configDir); err != nil {
 		h.log.WithError(err).Error("unable to store user's private key")
 	}
+
+	h.log.Infof("[%s] certificate successfully obtained and stored\n", strings.Join(domains, ", "))
 
 	return nil
 }

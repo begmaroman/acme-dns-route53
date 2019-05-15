@@ -15,6 +15,7 @@ type CertificateHandlerOptions struct {
 	Staging           bool
 	ConfigDir         string
 	NotificationTopic string
+	RenewBefore       int
 
 	Store    certstore.CertStore
 	Notifier notifier.Notifier
@@ -28,6 +29,7 @@ type CertificateHandler struct {
 	isStaging         bool
 	configDir         string
 	notificationTopic string
+	renewBefore       int
 
 	store    certstore.CertStore
 	notifier notifier.Notifier
@@ -41,6 +43,7 @@ func NewCertificateHandler(opts *CertificateHandlerOptions) *CertificateHandler 
 		isStaging:         opts.Staging,
 		store:             opts.Store,
 		notificationTopic: opts.NotificationTopic,
+		renewBefore:       opts.RenewBefore,
 		notifier:          opts.Notifier,
 		r53:               opts.R53,
 		configDir:         opts.ConfigDir,
