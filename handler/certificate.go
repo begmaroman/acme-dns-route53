@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/go-acme/lego/certcrypto"
+	"github.com/go-acme/lego/challenge"
 	"github.com/go-acme/lego/registration"
 	"github.com/sirupsen/logrus"
 
@@ -19,7 +19,7 @@ type CertificateHandlerOptions struct {
 
 	Store    certstore.CertStore
 	Notifier notifier.Notifier
-	R53      *route53.Route53
+	DNS01    challenge.Provider
 
 	Log *logrus.Logger
 }
@@ -33,7 +33,7 @@ type CertificateHandler struct {
 
 	store    certstore.CertStore
 	notifier notifier.Notifier
-	r53      *route53.Route53
+	dns01    challenge.Provider
 	log      *logrus.Logger
 }
 
@@ -45,7 +45,7 @@ func NewCertificateHandler(opts *CertificateHandlerOptions) *CertificateHandler 
 		notificationTopic: opts.NotificationTopic,
 		renewBefore:       opts.RenewBefore,
 		notifier:          opts.Notifier,
-		r53:               opts.R53,
+		dns01:             opts.DNS01,
 		configDir:         opts.ConfigDir,
 		log:               opts.Log,
 	}

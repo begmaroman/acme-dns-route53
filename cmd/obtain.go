@@ -1,13 +1,15 @@
 package cmd
 
 import (
-	"github.com/aws/aws-sdk-go/service/route53"
+	"sync"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/begmaroman/acme-dns-route53/certstore/acmstore"
 	"github.com/begmaroman/acme-dns-route53/cmd/flags"
 	"github.com/begmaroman/acme-dns-route53/handler"
+	"github.com/begmaroman/acme-dns-route53/handler/r53dns"
 	"github.com/begmaroman/acme-dns-route53/notifier/awsns"
 )
 
@@ -21,27 +23,33 @@ var certificateObtainCmd = &cobra.Command{
 		domains := flags.GetDomainsFlagValue(cmd)
 		email := flags.GetEmailFlagValue(cmd)
 
-		// Create handler options
-		certificateHandlerOpts := &handler.CertificateHandlerOptions{
+		// Init a common logger
+		log := logrus.New()
+
+		// Create a new certificates handler
+		h := handler.NewCertificateHandler(&handler.CertificateHandlerOptions{
 			ConfigDir:         flags.GetConfigPathFlagValue(cmd),
 			Staging:           flags.GetStagingFlagValue(cmd),
 			NotificationTopic: flags.GetTopicFlagValue(cmd),
 			RenewBefore:       flags.GetRenewBeforeFlagValue(cmd) * 24,
-			Log:               logrus.New(),                           // Create a new logger
-			Notifier:          awsns.New(AWSSession, logrus.New()),    // Initialize SNS API client
-			R53:               route53.New(AWSSession),                // Initialize Route53 API client
-			Store:             acmstore.New(AWSSession, logrus.New()), // Initialize ACM client
-		}
+			Log:               log,
+			Notifier:          awsns.New(AWSSession, log),    // Initialize SNS API client
+			DNS01:             r53dns.New(AWSSession, log),   // Initialize DNS-01 challenge provider by Route 53
+			Store:             acmstore.New(AWSSession, log), // Initialize ACM client
+		})
 
-		// Create a new certificates handler
-		h := handler.NewCertificateHandler(certificateHandlerOpts)
-
+		var wg sync.WaitGroup
 		for _, domain := range domains {
-			if err := h.Obtain([]string{domain}, email); err != nil {
-				logrus.Errorf("[%s] unable to obtain certificate: %s\n", domain, err)
-				continue
-			}
+			wg.Add(1)
+			go func(domainList []string) {
+				defer wg.Done()
+
+				if err := h.Obtain(domainList, email); err != nil {
+					logrus.Errorf("[%s] unable to obtain certificate: %s\n", domain, err)
+				}
+			}([]string{domain})
 		}
+		wg.Wait()
 
 		return nil
 	},

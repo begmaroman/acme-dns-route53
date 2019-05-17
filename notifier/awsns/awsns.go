@@ -35,7 +35,7 @@ func (n *snsNotifier) Notify(topic, message string) error {
 		Message:  aws.String(message),
 	})
 	if err != nil {
-		return errors.Wrap(err, "unable to publish notification to SNS")
+		return errors.Wrap(err, "sns: unable to publish notification to SNS")
 	}
 
 	n.log.Infof("sns: Message with ID '%s' published to topic '%s' successfully", aws.StringValue(publishResp.MessageId), topic)

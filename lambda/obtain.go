@@ -2,12 +2,13 @@ package lambda
 
 import (
 	"errors"
+	"sync"
 
-	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/sirupsen/logrus"
 
 	"github.com/begmaroman/acme-dns-route53/certstore/acmstore"
 	"github.com/begmaroman/acme-dns-route53/handler"
+	"github.com/begmaroman/acme-dns-route53/handler/r53dns"
 	"github.com/begmaroman/acme-dns-route53/notifier/awsns"
 )
 
@@ -46,27 +47,32 @@ func HandleLambdaEvent(payload Payload) error {
 		return ErrEmailMissing
 	}
 
-	// Create options
-	certificateHandlerOpts := &handler.CertificateHandlerOptions{
+	log := logrus.New()
+
+	// Create a new handler
+	certificateHandler := handler.NewCertificateHandler(&handler.CertificateHandlerOptions{
 		ConfigDir:         ConfigDir,
 		Staging:           conf.Staging,
 		NotificationTopic: conf.Topic,
-		RenewBefore:       conf.RenewBefore,
-		Log:               logrus.New(),                           // Create a new logger
-		Notifier:          awsns.New(AWSSession, logrus.New()),    // Initialize SNS API client
-		R53:               route53.New(AWSSession),                // Initialize Route53 API client
-		Store:             acmstore.New(AWSSession, logrus.New()), // Initialize ACM client
-	}
+		RenewBefore:       conf.RenewBefore * 24,
+		Log:               log,
+		Notifier:          awsns.New(AWSSession, log),    // Initialize SNS API client
+		DNS01:             r53dns.New(AWSSession, log),   // Initialize DNS-01 challenge provider by Route 53
+		Store:             acmstore.New(AWSSession, log), // Initialize ACM client
+	})
 
-	// Create a new handler
-	certificateHandler := handler.NewCertificateHandler(certificateHandlerOpts)
-
+	var wg sync.WaitGroup
 	for _, domain := range conf.Domains {
-		if err := certificateHandler.Obtain([]string{domain}, conf.Email); err != nil {
-			logrus.WithError(err).Errorf("[%s] unable to obtain certificate", domain)
-			continue
-		}
+		wg.Add(1)
+		go func(domainList []string) {
+			defer wg.Done()
+
+			if err := certificateHandler.Obtain(domainList, conf.Email); err != nil {
+				logrus.Errorf("[%s] unable to obtain certificate: %s\n", domain, err)
+			}
+		}([]string{domain})
 	}
+	wg.Wait()
 
 	return nil
 }

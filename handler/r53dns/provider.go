@@ -1,6 +1,7 @@
 package r53dns
 
 import (
+	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/go-acme/lego/challenge"
 	"github.com/go-acme/lego/challenge/dns01"
@@ -8,25 +9,22 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Ensures that DNSProvider implements challenge.Provider interface
-var _ challenge.Provider = &DNSProvider{}
-
-// DNSProvider is the custom implementation of the challenge.Provider interface
-type DNSProvider struct {
+// dnsProvider is the custom implementation of the challenge.Provider interface
+type dnsProvider struct {
 	r53Worker *r53ResourceWorker
 	log       *logrus.Logger
 }
 
-// NewDNSProviderManual is the constructor of DNSProvider
-func NewProvider(r53 *route53.Route53, log *logrus.Logger) *DNSProvider {
-	return &DNSProvider{
-		r53Worker: newR53ResourceWorker(r53, log),
+// New is the constructor of DNSProvider
+func New(provider client.ConfigProvider, log *logrus.Logger) challenge.Provider {
+	return &dnsProvider{
+		r53Worker: newR53ResourceWorker(route53.New(provider), log),
 		log:       log,
 	}
 }
 
 // Present prints instructions for manually creating the TXT record
-func (p *DNSProvider) Present(domain, token, keyAuth string) error {
+func (p *dnsProvider) Present(domain, token, keyAuth string) error {
 	fqdn, value := dns01.GetRecord(domain, keyAuth)
 
 	authZone, err := dns01.FindZoneByFqdn(fqdn)
@@ -48,7 +46,7 @@ func (p *DNSProvider) Present(domain, token, keyAuth string) error {
 }
 
 // CleanUp prints instructions for manually removing the TXT record
-func (p *DNSProvider) CleanUp(domain, token, keyAuth string) error {
+func (p *dnsProvider) CleanUp(domain, token, keyAuth string) error {
 	fqdn, value := dns01.GetRecord(domain, keyAuth)
 
 	// Retrieve zone by FQDN

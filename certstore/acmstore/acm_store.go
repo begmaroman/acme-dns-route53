@@ -19,9 +19,6 @@ var (
 	ErrCertificateMissing = errors.New("certificate is empty")
 )
 
-// To make sure that ACM implements CertStore interface
-var _ certstore.CertStore = &acmStore{}
-
 // ACM is the implementation of CertStore interface.
 // Used Amazon Certificate Manager to work with certificates
 type acmStore struct {
@@ -49,14 +46,14 @@ func (a *acmStore) Store(cert *certificate.Resource, domains []string) error {
 
 	serverCert, err := retrieveServerCertificate(cert.Certificate)
 	if err != nil {
-		return errors.Wrap(err, "unable to retrieve server certificate")
+		return errors.Wrap(err, "acm: unable to retrieve server certificate")
 	}
 
 	a.log.Infof("[%s] acm: Finding existing server certificate in ACM", domainsListString)
 
 	existingCert, err := a.findExistingCertificate(domains)
 	if err != nil {
-		return errors.Wrap(err, "unable to find existing certificate")
+		return errors.Wrap(err, "acm: unable to find existing certificate")
 	}
 
 	// Retrieve exising certificate ID
@@ -79,7 +76,7 @@ func (a *acmStore) Store(cert *certificate.Resource, domains []string) error {
 
 	resp, err := a.acm.ImportCertificate(input)
 	if err != nil {
-		return errors.Wrap(err, "unable to store certificate into ACM")
+		return errors.Wrap(err, "acm: unable to store certificate into ACM")
 	}
 
 	a.log.Infof("[%s] acm: Imported certificate data in ACM with Arn = '%s'", domainsListString, aws.StringValue(resp.CertificateArn))
@@ -91,7 +88,7 @@ func (a *acmStore) Store(cert *certificate.Resource, domains []string) error {
 func (a *acmStore) Load(domains []string) (*certstore.CertificateDetails, error) {
 	cert, err := a.findExistingCertificate(domains)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to find certificate")
+		return nil, errors.Wrap(err, "acm: unable to find certificate")
 	}
 
 	return toCertificateDetails(cert), nil
@@ -103,7 +100,7 @@ func (a *acmStore) findExistingCertificate(domains []string) (*acm.CertificateDe
 		MaxItems: aws.Int64(1000),
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to list certificates")
+		return nil, errors.Wrap(err, "acm: unable to list certificates")
 	}
 
 	for _, crt := range listResp.CertificateSummaryList {
@@ -111,7 +108,7 @@ func (a *acmStore) findExistingCertificate(domains []string) (*acm.CertificateDe
 			CertificateArn: crt.CertificateArn,
 		})
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to describe certificate")
+			return nil, errors.Wrap(err, "acm: unable to describe certificate")
 		}
 
 		altNames := aws.StringValueSlice(certResp.Certificate.SubjectAlternativeNames)
