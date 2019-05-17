@@ -28,7 +28,7 @@ func (h *CertificateHandler) Obtain(domains []string, email string) error {
 	// Check if there is existing an certificate for the given domains
 	existingCert, err := h.store.Load(domains)
 	if err != nil {
-		return errors.Wrap(err, "unable to load existing certificate")
+		return errors.Wrap(err, "handler: unable to load existing certificate")
 	}
 
 	if existingCert != nil {
@@ -41,29 +41,29 @@ func (h *CertificateHandler) Obtain(domains []string, email string) error {
 	// Load user
 	certUser, err := getUser(h.toUserParams(email))
 	if err != nil {
-		return errors.Wrap(err, "unable to load user")
+		return errors.Wrap(err, "handler: unable to load user")
 	}
 
 	// Create config
 	config, err := getConfig(h.toConfigParams(certUser))
 	if err != nil {
-		return errors.Wrap(err, "unable to create config")
+		return errors.Wrap(err, "handler: unable to create config")
 	}
 
 	// Create a client facilitates communication with the CA server.
 	client, err := lego.NewClient(config)
 	if err != nil {
-		return errors.Wrap(err, "unable to create lego client")
+		return errors.Wrap(err, "handler: unable to create lego client")
 	}
 
 	// Use DNS-01 challenge to verify that the given domain belongs to the current server
 	if err = client.Challenge.SetDNS01Provider(h.dns01); err != nil {
-		return errors.Wrap(err, "failed to set DNS-01 provider")
+		return errors.Wrap(err, "handler: failed to set DNS-01 provider")
 	}
 
 	// New users will need to register
 	if certUser.Registration, err = client.Registration.Register(registerOptions); err != nil {
-		return errors.Wrap(err, "could not register Let's Encrypt account")
+		return errors.Wrap(err, "handler: could not register Let's Encrypt account")
 	}
 
 	// Create a new request to obtain certificate
@@ -74,24 +74,24 @@ func (h *CertificateHandler) Obtain(domains []string, email string) error {
 		MustStaple: false,
 	})
 	if err != nil {
-		return errors.Wrap(err, "unable to obtain certificate")
+		return errors.Wrap(err, "handler: unable to obtain certificate")
 	}
 
 	// Store the obtained certificate
 	if err := h.store.Store(crt, domains); err != nil {
-		return errors.Wrap(err, "unable to store certificates")
+		return errors.Wrap(err, "handler: unable to store certificates")
 	}
 
 	// Notify that the certificate has been obtained for the given domains
 	if len(h.notificationTopic) > 0 {
 		if err := h.notifier.Notify(h.notificationTopic, h.buildPublishMessage(domainsStr)); err != nil {
-			h.log.WithError(err).Errorf("[%s] handler: failed to publish notification", domainsStr)
+			return errors.Wrap(err, "handler: failed to publish notification")
 		}
 	}
 
 	// Store user's private key into config file by the config path
 	if err := certUser.StorePrivateKey(h.configDir); err != nil {
-		h.log.WithError(err).Errorf("[%s] handler: unable to store user's private key", domainsStr)
+		return errors.Wrap(err, "handler: unable to store user's private key")
 	}
 
 	h.log.Infof("[%s] handler: certificate successfully obtained and stored", domainsStr)
