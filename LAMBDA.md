@@ -106,7 +106,7 @@ Filepath: ~/lambda-acme-dns-route53-executor-policy.json
                 "acm:DescribeCertificate"
             ],
             "Resource": [
-                "arn:aws:sns:${var.region}:<AWS_ACCOUNT_ID>:alarm_topic",
+                "arn:aws:sns:<AWS_REGION>:<AWS_ACCOUNT_ID>:*",
                 "arn:aws:route53:::hostedzone/*",
                 "arn:aws:route53:::change/*",
                 "arn:aws:acm:<AWS_REGION>:<AWS_ACCOUNT_ID>:certificate/*"

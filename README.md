@@ -57,9 +57,10 @@ Amazon provides [information about managing](https://docs.aws.amazon.com/Route53
                 "acm:DescribeCertificate"
             ],
             "Resource": [
+                "arn:aws:sns:<AWS_REGION>:<AWS_ACCOUNT_ID>:*",
                 "arn:aws:route53:::hostedzone/<HOSTED_ZONE_ID>",
                 "arn:aws:route53:::change/*",
-                "arn:aws:acm:us-east-1:<AWS_ACCOUNT_ID>:certificate/*"
+                "arn:aws:acm:<AWS_REGION>:<AWS_ACCOUNT_ID>:certificate/*"
             ]
         }
     ]
